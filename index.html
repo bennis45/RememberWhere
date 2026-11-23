@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RememberWhere</title>
+<meta name="description" content="A map of everywhere our family has traveled.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
+<style>
+  /* Layout: full-bleed map; a floating "logbook" panel (left on desktop, bottom sheet on phones). */
+  :root {
+    --bg: #e9edf0;
+    --panel: #ffffff;
+    --ink: #17222d;
+    --muted: #5d6b78;
+    --line: #dde3e8;
+    --pin: #0f5c6e;
+    --pin-ink: #ffffff;
+    --hover: #f1f5f7;
+    --shadow: 0 8px 28px rgba(15, 30, 45, .18), 0 1px 3px rgba(15, 30, 45, .12);
+    --tile-filter: saturate(.75);
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b2229;
+      --panel: #1f2830;
+      --ink: #e8eef3;
+      --muted: #94a3b1;
+      --line: #33404b;
+      --pin: #3fb6c9;
+      --pin-ink: #0c1a20;
+      --hover: #27323c;
+      --shadow: 0 8px 28px rgba(0, 0, 0, .5), 0 1px 3px rgba(0, 0, 0, .4);
+      --tile-filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.85) saturate(.5);
+      color-scheme: dark;
+    }
+  }
+
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--body); }
+  #map { position: fixed; inset: 0; background: var(--bg); }
+  .leaflet-tile-pane { filter: var(--tile-filter); }
+
+  /* ---------- Panel ---------- */
+  .panel {
+    position: fixed; z-index: 1000;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    left: calc(12px + env(safe-area-inset-left, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    width: 340px;
+    display: flex; flex-direction: column;
+    background: var(--panel); border-radius: 14px; box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel.collapsed { bottom: auto; }
+  .panel header { padding: 16px 18px 12px; display: grid; gap: 10px; border-bottom: 1px solid var(--line); }
+  .title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  h1 { margin: 0; font: 700 26px/1 var(--display); letter-spacing: -.01em; }
+  h1 span { color: var(--pin); }
+  .stats { margin: 0; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .stats b { color: var(--ink); font-weight: 600; }
+
+  .toggle-log {
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+    font: 500 12px var(--body); border-radius: 999px; padding: 4px 10px; cursor: pointer; white-space: nowrap;
+  }
+  .toggle-log:hover { color: var(--ink); background: var(--hover); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    --c: var(--muted);
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px 5px 8px; border-radius: 999px; cursor: pointer;
+    border: 1.5px solid var(--c); background: transparent; color: var(--ink);
+    font: 500 13px var(--body);
+  }
+  .chip .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+  .chip[aria-pressed="false"] { border-color: var(--line); color: var(--muted); }
+  .chip[aria-pressed="false"] .dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
+  .chip:focus-visible, .toggle-log:focus-visible, .trip:focus-visible { outline: 2px solid var(--pin); outline-offset: 2px; }
+
+  /* ---------- Trip log ---------- */
+  .log { overflow-y: auto; padding: 4px 0 12px; flex: 1; min-height: 0; }
+  .panel.collapsed .log { display: none; }
+  .year {
+    position: sticky; top: 0; z-index: 1;
+    margin: 0; padding: 10px 18px 4px; background: var(--panel);
+    font: 500 12px var(--mono); letter-spacing: .06em; color: var(--muted);
+  }
+  .trip {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: start;
+    width: 100%; padding: 7px 18px; border: 0; background: transparent; color: inherit;
+    text-align: left; font: inherit; cursor: pointer;
+  }
+  .trip:hover { background: var(--hover); }
+  .trip .where { font-weight: 600; min-width: 0; }
+  .trip .what { grid-column: 1; color: var(--muted); font-size: 13px; min-width: 0; }
+  .trip .what em { font-style: normal; opacity: .8; }
+  .dots { display: inline-flex; gap: 3px; padding-top: 5px; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+  .empty { padding: 20px 18px; color: var(--muted); }
+
+  /* ---------- Pins ---------- */
+  .pin {
+    display: grid; place-items: center; box-sizing: border-box;
+    width: 100%; height: 100%; border-radius: 50%;
+    background: var(--pin); color: var(--pin-ink);
+    border: 2.5px solid var(--panel); box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    font: 600 11px var(--body); font-variant-numeric: tabular-nums;
+  }
+  .cluster {
+    display: grid; place-items: center; box-sizing: border-box;
+    width: 100%; height: 100%; border-radius: 50%;
+    background: var(--panel); color: var(--pin);
+    border: 3px solid var(--pin); box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    font: 700 13px var(--body); font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Popups ---------- */
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+  .leaflet-popup-content-wrapper { border-radius: 12px; }
+  .leaflet-popup-content { margin: 14px 16px; font: 14px/1.4 var(--body); }
+  .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+  .pop h2 { margin: 0 0 2px; font: 700 18px/1.15 var(--display); padding-right: 14px; }
+  .pop .sub { margin: 0 0 8px; color: var(--muted); font-size: 12px; }
+  .pop ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; max-height: 260px; overflow-y: auto; }
+  .pop li { display: grid; grid-template-columns: 40px 1fr; gap: 0 8px; }
+  .pop .yr { font: 500 12px/1.6 var(--mono); color: var(--muted); }
+  .pop .act { min-width: 0; }
+  .pop .note, .pop .with { color: var(--muted); font-size: 12px; }
+  .pop .note { font-style: italic; }
+  .pop .dots { padding-top: 3px; }
+
+  .leaflet-control-zoom a { background: var(--panel); color: var(--ink); border-color: var(--line) !important; }
+  .leaflet-control-zoom a:hover { background: var(--hover); }
+  .leaflet-control-attribution { background: color-mix(in srgb, var(--panel) 80%, transparent) !important; color: var(--muted); }
+  .leaflet-control-attribution a { color: var(--muted); }
+
+  /* ---------- Phones: panel becomes a bottom sheet ---------- */
+  @media (max-width: 640px) {
+    .panel {
+      top: auto; width: auto;
+      left: calc(8px + env(safe-area-inset-left, 0px));
+      right: calc(8px + env(safe-area-inset-right, 0px));
+      bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+      max-height: 58%;
+    }
+    .panel header { padding: 12px 14px 10px; gap: 8px; }
+    h1 { font-size: 22px; }
+    .leaflet-bottom.leaflet-right { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .leaflet-fade-anim .leaflet-popup, .leaflet-zoom-anim .leaflet-zoom-animated { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="map" role="region" aria-label="Map of places we have been"></div>
+
+<aside class="panel" id="panel">
+  <header>
+    <div class="title-row">
+      <h1>Remember<span>Where</span></h1>
+      <button class="toggle-log" id="toggle-log" type="button" aria-controls="log" aria-expanded="true">Hide trips</button>
+    </div>
+    <p class="stats" id="stats"></p>
+    <div class="chips" id="chips" role="group" aria-label="Show trips by family member"></div>
+  </header>
+  <nav class="log" id="log" aria-label="Trips by year"></nav>
+</aside>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script src="data.js"></script>
+<script>
+(() => {
+  // ---------- Validate data ----------
+  const trips = TRIPS.filter(t => {
+    const badPlace = t.places.find(p => !PLACES[p]);
+    const badPerson = t.family.find(f => !PEOPLE[f]);
+    if (badPlace || badPerson) {
+      console.warn(`RememberWhere: skipping ${t.year} trip; unknown ${badPlace ? `place "${badPlace}"` : `initials "${badPerson}"`}`);
+      return false;
+    }
+    return true;
+  }).sort((a, b) => b.year - a.year); // newest first; stable sort keeps file order within a year
+
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const withList = g => {
+    if (!g?.length) return "";
+    const names = g.map(esc);
+    return "with " + (names.length === 1 ? names[0] : names.slice(0, -1).join(", ") + " & " + names.at(-1));
+  };
+  const dots = fam => `<span class="dots" aria-label="${esc(fam.map(f => PEOPLE[f].name).join(", "))}">${
+    Object.keys(PEOPLE).filter(k => fam.includes(k)).map(k => `<i style="background:${PEOPLE[k].color}" title="${esc(PEOPLE[k].name)}"></i>`).join("")
+  }</span>`;
+
+  // ---------- Map ----------
+  const map = L.map("map", { zoomControl: false, worldCopyJump: true, minZoom: 2 });
+  L.control.zoom({ position: "topright" }).addTo(map);
+
+  // OpenStreetMap's free tiles (no key; attribution required). Dark mode darkens them with a CSS filter.
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
+
+  const clusters = L.markerClusterGroup({
+    showCoverageOnHover: false,
+    maxClusterRadius: 40,
+    iconCreateFunction: c => {
+      const n = c.getChildCount();
+      const size = n < 10 ? 34 : n < 30 ? 40 : 46;
+      return L.divIcon({ html: `<div class="cluster">${n}</div>`, className: "", iconSize: [size, size] });
+    },
+  }).addTo(map);
+
+  // ---------- State ----------
+  const selected = new Set(Object.keys(PEOPLE));
+  let markers = {}; // place name -> marker
+
+  // Keep popups clear of the panel when the map auto-pans to show them.
+  const popupPad = () => window.matchMedia("(max-width: 640px)").matches ? [20, 20] : [370, 20];
+
+  const visible = () => trips.filter(t => t.family.some(f => selected.has(f)));
+
+  function render() {
+    const list = visible();
+
+    // Group visits by place
+    const byPlace = {};
+    for (const t of list) for (const p of t.places) (byPlace[p] ||= []).push(t);
+
+    // Markers
+    clusters.clearLayers();
+    markers = {};
+    for (const [name, visits] of Object.entries(byPlace)) {
+      const pl = PLACES[name];
+      const n = visits.length;
+      const size = n === 1 ? 20 : n < 5 ? 26 : 32;
+      const m = L.marker([pl.lat, pl.lng], {
+        title: name,
+        icon: L.divIcon({ html: `<div class="pin">${n > 1 ? n : ""}</div>`, className: "", iconSize: [size, size] }),
+      });
+      m.bindPopup(() => `
+        <div class="pop">
+          <h2>${esc(name)}</h2>
+          <p class="sub">${n} ${n === 1 ? "visit" : "visits"}${pl.approx ? " · approximate location" : ""}</p>
+          <ul>${visits.map(t => `
+            <li><span class="yr">${t.year}</span>
+              <span class="act">${esc(t.activity || (t.places.length > 1 ? t.places.join(" · ") : "Trip"))} ${dots(t.family)}
+              ${t.guests?.length ? `<div class="with">${withList(t.guests)}</div>` : ""}
+              ${t.note ? `<div class="note">${esc(t.note)}</div>` : ""}</span></li>`).join("")}
+          </ul>
+        </div>`, { maxWidth: 300, minWidth: 220, autoPanPaddingTopLeft: popupPad(), autoPanPaddingBottomRight: [20, 20] });
+      markers[name] = m;
+      clusters.addLayer(m);
+    }
+
+    // Stats
+    const years = list.map(t => t.year);
+    document.getElementById("stats").innerHTML = list.length
+      ? `<b>${list.length}</b> trips · <b>${Object.keys(byPlace).length}</b> places · ${Math.min(...years)}–${Math.max(...years)}`
+      : "No trips selected";
+
+    // Trip log
+    const log = document.getElementById("log");
+    if (!list.length) { log.innerHTML = `<p class="empty">Pick someone above to see their trips.</p>`; return; }
+    let html = "", lastYear = null;
+    list.forEach((t, i) => {
+      if (t.year !== lastYear) { html += `<h3 class="year">${t.year}</h3>`; lastYear = t.year; }
+      html += `<button class="trip" type="button" data-i="${i}">
+        <span class="where">${esc(t.places.join(" · "))}</span>${dots(t.family)}
+        ${(() => {
+          const bits = [t.activity && esc(t.activity), withList(t.guests), t.note && `<em>${esc(t.note)}</em>`].filter(Boolean);
+          return bits.length ? `<span class="what">${bits.join(" · ")}</span>` : "";
+        })()}
+      </button>`;
+    });
+    log.innerHTML = html;
+    log.querySelectorAll(".trip").forEach(btn => btn.addEventListener("click", () => focusTrip(list[+btn.dataset.i])));
+  }
+
+  function focusTrip(t) {
+    if (window.matchMedia("(max-width: 640px)").matches) setCollapsed(true);
+    if (t.places.length === 1) {
+      const m = markers[t.places[0]];
+      clusters.zoomToShowLayer(m, () => m.openPopup());
+    } else {
+      map.closePopup();
+      map.flyToBounds(L.latLngBounds(t.places.map(p => [PLACES[p].lat, PLACES[p].lng])), { padding: [80, 80], maxZoom: 9 });
+    }
+  }
+
+  // ---------- Family chips ----------
+  const chips = document.getElementById("chips");
+  for (const [k, p] of Object.entries(PEOPLE)) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.style.setProperty("--c", p.color);
+    b.setAttribute("aria-pressed", "true");
+    b.innerHTML = `<span class="dot"></span>${esc(p.name)}`;
+    b.addEventListener("click", () => {
+      selected.has(k) ? selected.delete(k) : selected.add(k);
+      b.setAttribute("aria-pressed", selected.has(k));
+      render();
+    });
+    chips.appendChild(b);
+  }
+
+  // ---------- Collapse trip log ----------
+  const panel = document.getElementById("panel");
+  const toggle = document.getElementById("toggle-log");
+  function setCollapsed(c) {
+    panel.classList.toggle("collapsed", c);
+    toggle.textContent = c ? "Show trips" : "Hide trips";
+    toggle.setAttribute("aria-expanded", String(!c));
+  }
+  toggle.addEventListener("click", () => setCollapsed(!panel.classList.contains("collapsed")));
+  if (window.matchMedia("(max-width: 640px)").matches) setCollapsed(true);
+
+  // ---------- Go ----------
+  render();
+  // Start on North America + Europe, where most pins are.
+  map.fitBounds([[18, -125], [56, 18]], {
+    paddingTopLeft: window.matchMedia("(max-width: 640px)").matches ? [0, 0] : [360, 0],
+  });
+})();
+</script>
+</body>
+</html>
