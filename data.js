@@ -120,7 +120,7 @@ const PLACES = {
   "Germany":                { lat: 51.226, lng: 6.772 },
   "France":                 { lat: 48.858, lng: 2.294 },
   "Paris":                  { lat: 48.857, lng: 2.352 },
-  "Italy":                  { lat: 45.467, lng: 9.190 },
+  "Italy":                  { lat: 45.464, lng: 9.191 },
   "Monza":                  { lat: 45.616, lng: 9.281 },
   "Netherlands":            { lat: 51.437, lng: 5.478 },
   "Japan":                  { lat: 35.690, lng: 139.701 },
