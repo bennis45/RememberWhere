@@ -13,8 +13,8 @@
 // Keep cancelled and future trips out of this file. The repo is public.
 
 const PEOPLE = {
-  B:  { name: "Brad",  color: "#d93a2b" },
-  Rc: { name: "Rae",   color: "#c43d78" },
+  B:  { name: "Brad",  color: "#a8213f" },
+  Rc: { name: "Rae",   color: "#ec6fae" },
   Ry: { name: "Ryan",  color: "#2f6fdf" },
   E:  { name: "Ethan", color: "#d4a20c" },
 };
