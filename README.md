@@ -15,6 +15,41 @@ If a trip names a place or initials that don't exist, the page skips it and logs
 
 Only add past trips. The repository is public.
 
+## Publishing (GitHub Pages)
+
+The live site is https://bennis45.github.io/RememberWhere/ and it serves whatever is on the `main` branch.
+
+### One-time setup
+
+Run these from this folder. They need the GitHub CLI (`gh`), signed in.
+
+1. Create the public repository and push the local commits:
+
+   ```bash
+   gh repo create RememberWhere --public --source=. --remote=origin --push
+   ```
+
+2. Turn on GitHub Pages for the `main` branch:
+
+   ```bash
+   gh api -X POST repos/bennis45/RememberWhere/pages -f "source[branch]=main" -f "source[path]=/"
+   ```
+
+3. About a minute later, check that the site is built (it should print `built`):
+
+   ```bash
+   gh api repos/bennis45/RememberWhere/pages --jq .status
+   ```
+
+### Updating
+
+```bash
+git commit -am "Add <trip>"
+git push
+```
+
+Pages rebuilds automatically, usually within a minute or two. A hard refresh in the browser makes sure you aren't seeing a cached copy.
+
 ## Running locally
 
 ```bash
