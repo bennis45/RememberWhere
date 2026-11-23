@@ -115,9 +115,10 @@ const PLACES = {
   "Virgin Islands":         { lat: 18.337, lng: -64.740 },
 
   // Europe and Asia
-  "Belgium":                { lat: 50.846381, lng: 4.351},
+  "Belgium":                { lat: 50.846, lng: 4.351},
   "Wales":                  { lat: 51.477, lng: -3.161 },
   "Germany":                { lat: 51.226, lng: 6.772 },
+  "Vienna":                 { lat: 48.220, lng: 16.378 },
   "France":                 { lat: 48.858, lng: 2.294 },
   "Paris":                  { lat: 48.857, lng: 2.352 },
   "Italy":                  { lat: 45.464, lng: 9.191 },
@@ -251,7 +252,7 @@ const TRIPS = [
   { year: 2026, places: ["Minneapolis"], activity: "Ashley’s 40th birthday", family: ["B"] },
   { year: 2026, places: ["St. Louis"], activity: "Blues, zoo, aquarium, Cardinals", family: ["E"], guests: ["Megan"] },
   { year: 2026, places: ["Virgin Islands"], family: ["B","Rc"], guests: ["Sanne","Erwin"] },
-  { year: 2026, places: ["Germany"], family: ["Ry"], guests: ["Kate","Kate’s brother Luke"] },
+  { year: 2026, places: ["Austria","Germany"], family: ["Ry"], guests: ["Kate","Kate’s brother Luke"] },
   { year: 2026, places: ["Mid-Ohio"], activity: "Track day", family: ["B"] },
   { year: 2026, places: ["Kansas City"], activity: "World Cup quarterfinal, ARG vs. SUI", family: ["B","E"] },
   { year: 2026, places: ["NCM Motorsports Park"], activity: "Track day", family: ["B","Ry"] },
