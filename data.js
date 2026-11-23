@@ -98,8 +98,10 @@ const PLACES = {
   "San Francisco":          { lat: 37.775, lng: -122.419 },
   "Lake Tahoe":             { lat: 39.097, lng: -120.032 },
   "Eugene":                 { lat: 44.052, lng: -123.087 },
-  "Hawaii":                 { lat: 21.307, lng: -157.858, approx: true },
-  "Maui":                   { lat: 20.800, lng: -156.330 },
+  "Kauai":                  { lat: 22.048, lng: -159.649},
+  "Hawaii":                 { lat: 19.474, lng: -155.466 },
+  "Maui":                   { lat: 20.921, lng: -156.694 },
+  "Oahu":                   { lat: 21.274, lng: -157.824 },
   "Haleakalā":              { lat: 20.709, lng: -156.254 },
 
   // Canada and the Caribbean
@@ -181,7 +183,7 @@ const TRIPS = [
   { year: 2015, places: ["Norris Lake"], family: ["B","Rc","E","Ry"], guests: ["the Taylors"] },
   { year: 2015, places: ["Nashville"], activity: "Cubing tournament", family: ["B","Ry"] },
   { year: 2015, places: ["San Antonio"], activity: "Rock ’n’ Roll Marathon", family: ["B","Rc","E","Ry"] },
-  { year: 2016, places: ["Hawaii"], family: ["B","Rc","E","Ry"] },
+  { year: 2016, places: ["Oahu","Maui","Hawaii"], family: ["B","Rc","E","Ry"] },
   { year: 2016, places: ["Durham","Charlotte"], activity: "Thanksgiving & Foot Locker South", family: ["B","Rc","E","Ry"] },
   { year: 2017, places: ["Cleveland"], activity: "Cavs vs. Bulls", family: ["B","E"] },
   { year: 2017, places: ["Columbus"], activity: "Twenty One Pilots concert", family: ["B","Ry"], guests: ["Lexi"] },
@@ -251,5 +253,5 @@ const TRIPS = [
   { year: 2026, places: ["Mid-Ohio"], activity: "Track day", family: ["B"] },
   { year: 2026, places: ["Kansas City"], activity: "World Cup quarterfinal, ARG vs. SUI", family: ["B","E"] },
   { year: 2026, places: ["NCM Motorsports Park"], activity: "Track day", family: ["B","Ry"] },
-  { year: 2026, places: ["Maui","Haleakalā"], family: ["B","Rc"] },
+  { year: 2026, places: ["Kauai", "Maui","Haleakalā"], family: ["B","Rc"] },
 ];
