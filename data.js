@@ -170,7 +170,7 @@ const TRIPS = [
   { year: 2012, places: ["Outer Banks"], family: ["B","Rc","E","Ry"], guests: ["the Taylors"], note: "Shorter stay than the house was paid for" },
   { year: 2012, places: ["Minneapolis"], family: ["E"] },
   { year: 2012, places: ["Nashville"], activity: "Opryland Hotel", family: ["B","Rc","E","Ry"] },
-  { year: 2013, places: ["Hawaii"], family: ["B","Rc","E","Ry"], note: "Shorter stay than the room was paid for" },
+  { year: 2013, places: ["Maui"], family: ["B","Rc","E","Ry"], note: "Shorter stay than the room was paid for" },
   { year: 2013, places: ["Nashville"], family: ["Rc"], guests: ["Behki"] },
   { year: 2013, places: ["Georgia"], family: ["B","Rc","E","Ry"], guests: ["Memee"] },
   { year: 2014, places: ["Detroit"], activity: "Auto Show, Red Wings vs. Kings", family: ["B","E"] },
@@ -253,5 +253,5 @@ const TRIPS = [
   { year: 2026, places: ["Mid-Ohio"], activity: "Track day", family: ["B"] },
   { year: 2026, places: ["Kansas City"], activity: "World Cup quarterfinal, ARG vs. SUI", family: ["B","E"] },
   { year: 2026, places: ["NCM Motorsports Park"], activity: "Track day", family: ["B","Ry"] },
-  { year: 2026, places: ["Kauai", "Maui","Haleakalā"], family: ["B","Rc"] },
+  { year: 2026, places: ["Kauai","Maui","Haleakalā"], family: ["B","Rc"] },
 ];
