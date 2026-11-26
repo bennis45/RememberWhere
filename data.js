@@ -260,4 +260,5 @@ const TRIPS = [
   { year: 2026, places: ["Kansas City"], activity: "World Cup quarterfinal, ARG vs. SUI", family: ["B","E"] },
   { year: 2026, places: ["NCM Motorsports Park"], activity: "Track day", family: ["B","Ry"] },
   { year: 2026, places: ["Kauai","Maui","Haleakalā"], family: ["B","Rc"] },
+  { year: 2026, places: ["Orange Beach"], family: ["Ry"], guests: ["Kate"], activity: ["Thanksgiving with Kate's family"] }
 ];
